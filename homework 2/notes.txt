@@ -1,0 +1,15 @@
+Like homework 1, the matrixsum achieves speedup with 2,3 and 4 threads. 
+While Quicksort only achieves with 2 threads (stays constant with 3 or 4).
+
+I am guessing that since the matrix task requires more memory, it will also have to read more memory.
+This will lead to threads waiting for memory reads, and will then be able to utilize hyperthreading. 
+(Letting another thread execute while waiting)
+
+Quicksort however, requires less memory and will have a sequential partion before any parallel execution begins.
+The memory used by the largest data I used when sorting (1.000.000) integers. 4 MB, is about the same size as
+my largest cache. Therefore I am guessing that the threads in quicksort do not have to wait very long for 
+memory reads and cannot utilize hyperthreading very much. 
+
+
+
+Question: Huge overhead using Open MP? Not worth it if not great amount of data?

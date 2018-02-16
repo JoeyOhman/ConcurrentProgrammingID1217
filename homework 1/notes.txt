@@ -1,0 +1,17 @@
+Quicksort achieves speedup with 2 threads. More than 2 threads do not affect the execution time.
+
+MatrixSumA achieves speedup with 2, 3 and 4 threads. More than 4 threads to not affect execution time.
+1 thread: 0.59 sec
+2 threads: 0.41 sec
+3 threads: 0.33 sec
+4 threads: 0.30 sec
+threads > 4: 0.30 sec
+Is this because of 4 hardware threads? Why do QS only improve with 2 threads and not 4? (2 cores)
+
+MatrixSumB follows the same performance pattern as in A
+
+MatrixSumC follows the same performance pattern as in A and B
+
+Processor info:
+Intel® Core™ i7-7500U Processor
+2 cores, 4 threads
