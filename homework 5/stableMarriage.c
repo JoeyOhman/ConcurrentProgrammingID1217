@@ -6,7 +6,7 @@
 
 void findWoman(int, int, int);
 void findMan(int, int);
-void genRanking (int[], int, bool);
+void genRanking (int[], int, bool, int);
 void swap(int*, int*);
 void printArr(int[], int);
 void countEngagedWomen(int);
@@ -58,12 +58,24 @@ int main(int argc, char* argv[]) {
 void countEngagedWomen(int numWomenRemaining) {
   int i;
   int numPersons = numWomenRemaining*2;
+  int ranking[numWomenRemaining];
+  MPI_Status status;
+  printf("\n");
+
+  for(i = 0; i < numPersons; i++) {
+    MPI_Recv(&ranking, numWomenRemaining, MPI_INT, i, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    if(i % 2) // if received from man
+      printf("Man %d ranking: ", i);
+    else
+      printf("Woman %d ranking: ", i);
+    printArr(ranking, numWomenRemaining);
+  }
+
   bool womenTaken[numWomenRemaining];
   for(i = 0; i < numWomenRemaining; i++)
     womenTaken[i] = false;
 
   int info[3]; // 0: manrank, 1: womanrank, 2: accepted (bool)
-  MPI_Status status;
   while(numWomenRemaining > 0) {
     MPI_Recv(&info, 3, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     if(info[2])
@@ -71,15 +83,18 @@ void countEngagedWomen(int numWomenRemaining) {
     else
       printf("Man %d got denied by woman %d\n", info[0], info[1]);
 
-    if(!womenTaken[info[1]]) {
+    if(!womenTaken[info[1]/2]) {
       numWomenRemaining--; // She received her first proposal
-      womenTaken[info[1]] = 1;
+      womenTaken[info[1]/2] = 1;
+      //printf("Woman %d got her first proposal!\n", info[1]);
     }
   }
+  printf("\n");
   for(i = 0; i < numPersons; i++) { // Tell all processes to exit
+    printf("Sending exit to %d\n", i);
     MPI_Send(&i, 0, MPI_INT, i, 0, MPI_COMM_WORLD);
   }
-  MPI_Finalize();
+
 }
 
 void findWoman(int numWomen, int counterProc, int rank) {
@@ -87,11 +102,11 @@ void findWoman(int numWomen, int counterProc, int rank) {
   MPI_Status status;
   int womanIndex = 0;
   int ranking[numWomen];
-  genRanking(ranking, numWomen, false);
+  genRanking(ranking, numWomen, false, counterProc);
   while (true) {
     while(!accepted) {
       MPI_Send(&accepted, 0, MPI_INT, ranking[womanIndex], 0, MPI_COMM_WORLD);
-      MPI_Recv(&accepted, 0, MPI_INT, ranking[womanIndex], MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+      MPI_Recv(&accepted, 1, MPI_INT, ranking[womanIndex], MPI_ANY_TAG, MPI_COMM_WORLD, &status);
       int infoArr[3] = {rank, ranking[womanIndex], accepted};
       MPI_Send(infoArr, 3, MPI_INT, counterProc, 0, MPI_COMM_WORLD); // Send info to counterproc
       if(accepted)
@@ -102,7 +117,7 @@ void findWoman(int numWomen, int counterProc, int rank) {
     // Check if counterprocess told us to quit or woman left
     MPI_Recv(&accepted, 0, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     if(status.MPI_SOURCE == counterProc) {
-      MPI_Finalize();
+      break;
     } else { // Find a new woman
       accepted = 0;
       womanIndex = (womanIndex+1) % numWomen;
@@ -115,11 +130,11 @@ void findMan(int numMen, int counterProc) {
   int intBuff;
   int ranking[numMen];
   MPI_Status status;
-  genRanking(ranking, numMen, true);
+  genRanking(ranking, numMen, true, counterProc);
   while(true) {
     MPI_Recv(&intBuff, 0, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     if(status.MPI_SOURCE == counterProc) {
-      MPI_Finalize();
+      break;
     } else { // Proposal from man
       if(manIndex == -1 || findIndex(ranking, numMen, status.MPI_SOURCE) < manIndex) {
         intBuff = 1;
@@ -145,7 +160,7 @@ int findIndex(int arr[], int n, int val) {
   return -1;
 }
 
-void genRanking (int arr[], int n, bool findMan) {
+void genRanking (int arr[], int n, bool findMan, int counterProc) {
   int i;
   for (i = findMan; i < (n*2); i+=2) // Generate numbers
     arr[i/2] = i;
@@ -153,7 +168,8 @@ void genRanking (int arr[], int n, bool findMan) {
       int j = rand() % (i+1);
       swap(&arr[i], &arr[j]);
   }
-  printArr(arr, n);
+  //printArr(arr, n);
+  MPI_Send(arr, n, MPI_INT, counterProc, 0, MPI_COMM_WORLD);
 }
 
 void swap(int* a, int* b) {
