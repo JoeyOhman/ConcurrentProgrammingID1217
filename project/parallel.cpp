@@ -3,8 +3,9 @@
 #include <stdbool.h>
 #include <math.h>
 #include <time.h>
-#include <sys/time.h>
+#include <sys/times.h>
 #include <pthread.h>
+#include "header.h"
 
 void initParticles();
 void allocMem();
@@ -15,15 +16,11 @@ void printParticlePos(struct particle);
 void barrier();
 double readTimer();
 void* Worker(void*);
+void start_clock();
+void end_clock();
 
-struct vector {
-  double x, y;
-};
-
-struct particle {
-  struct vector pos, vel;
-  double mass;
-};
+static clock_t st_time, en_time;
+static struct tms st_cpu, en_cpu;
 
 struct particle *particles;
 struct vector** forces;
@@ -34,7 +31,6 @@ const long SIZE = 100, MASS_MAX = 1e9;
 const int DT = 10;
 int n, numWorkers, numTicks;
 
-double startTime, endTime;
 FILE* output;
 
 pthread_mutex_t barrier_mutex;  // mutex lock for the barrier
@@ -65,25 +61,23 @@ int main(int argc, char* argv[]) {
   fprintf(output, "Particle positions: \n");
 
   allocMem();
-  printf("Allocated memory\n");
+  //printf("Allocated memory\n");
   initParticles();
   //testInitParticles();
 
-  printf("Initiated particles\n");
+  //printf("Initiated particles\n");
 
-  startTime = readTimer();
+  start_clock();
   long l;
   for (l = 0; l < numWorkers; l++)
     pthread_create(&workerid[l], NULL, Worker, (void *) l);
 
-  printf("Initiated threads\n");
+  //printf("Initiated threads\n");
   for(l = 0; l < numWorkers; l++)
     pthread_join(workerid[l], NULL);
 
-  printf("Joined threads\n");
-  endTime = readTimer();
-
-  printf("Execution time: %g\n", endTime - startTime);
+  //printf("Joined threads\n");
+  end_clock();
 
   fclose(output);
 
@@ -93,11 +87,11 @@ void* Worker(void* arg) {
   long id = (long) arg;
   for(int i = 0; i < numTicks; i++) {
     calculateForces(id);
-    printf("Calculated forces!\n");
+    //printf("Calculated forces!\n");
     barrier();
-    printf("Barrier done");
+    //printf("Barrier done");
     moveBodies(id);
-    printf("Moved bodies!\n");
+    //printf("Moved bodies!\n");
     if(id == 0) {
       for(int j = 0; j < n; j++)
         printParticlePos(particles[j]);
@@ -109,7 +103,7 @@ void* Worker(void* arg) {
 
 void initParticles() {
   for(int i = 0; i < n; i++) {
-    struct vector pos = {rand() % SIZE, rand() % SIZE};
+    struct vector pos = {(double) (rand() % SIZE), (double) (rand() % SIZE)};
     particles[i].pos = pos;
     particles[i].vel = ZERO_VECTOR;
     for(int w = 0; w < numWorkers; w++)
@@ -198,25 +192,23 @@ void printParticlePos(struct particle p) {
 void barrier() {
   pthread_mutex_lock(&barrier_mutex);
   numArrived++;
-  printf("num arrived: %d of total: %d\n", numArrived, numWorkers);
+  //printf("num arrived: %d of total: %d\n", numArrived, numWorkers);
   if (numArrived == numWorkers) {
     numArrived = 0;
-    printf("All arrived, broadcasting\n");
+    //printf("All arrived, broadcasting\n");
     pthread_cond_broadcast(&go); // Signal and continue
-    printf("All arrived, broadcasted\n");
+    //printf("All arrived, broadcasted\n");
   } else
     pthread_cond_wait(&go, &barrier_mutex);
   pthread_mutex_unlock(&barrier_mutex);
 }
 
-double readTimer() {
-    static bool initialized = false;
-    static struct timeval start;
-    struct timeval end;
-    if( !initialized ) {
-        gettimeofday( &start, NULL );
-        initialized = true;
-    }
-    gettimeofday( &end, NULL );
-    return (end.tv_sec - start.tv_sec) + 1.0e-6 * (end.tv_usec - start.tv_usec);
+void start_clock() {
+  st_time = times(&st_cpu);
+}
+
+void end_clock() {
+  en_time = times(&en_cpu);
+  printf("Real Time: %jdms", (intmax_t)(en_time - st_time));
+
 }
