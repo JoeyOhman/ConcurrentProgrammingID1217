@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Bathroom {
 
-    private Lock lock = new ReentrantLock(); // Mutex
+    private Lock lock = new ReentrantLock(true); // Mutex
     private Condition men = lock.newCondition(); // Condition men
     private Condition women = lock.newCondition(); // Condition women
 
