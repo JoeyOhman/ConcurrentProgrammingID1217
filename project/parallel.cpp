@@ -149,7 +149,7 @@ void calculateForces(long w) {
     for (long j = i+1; j < n; j++) {
       distance = sqrt( pow(particles[i].pos.x - particles[j].pos.x, 2)
       + pow(particles[i].pos.y - particles[j].pos.y, 2));
-      if(distance == 0)
+      if(distance < 1)
         distance = 1;
       magnitude = (G*particles[i].mass*particles[j].mass) / pow(distance, 2);
       direction.x = particles[j].pos.x-particles[i].pos.x;
