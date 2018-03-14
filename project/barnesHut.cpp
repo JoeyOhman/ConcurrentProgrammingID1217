@@ -13,8 +13,8 @@ void testInitParticles();
 void printParticlePos(struct particle);
 double readTimer();
 
-const long SIZE = 100, MASS_MAX = 1e9;
-const double DT = 1000000000;
+const long SIZE = 500, MASS_MAX = 1e9;
+const double DT = 1;
 int n, far;
 
 double startTime, endTime;
@@ -32,25 +32,25 @@ int main(int argc, char* argv[]) {
   int numTicks = argc > 2 ? atoi(argv[2]) : 10;
   far = argc > 3 ? atoi(argv[3]) : 10;
 
-  output = fopen("data", "w");
+  //output = fopen("data", "w");
 
   printf("Number of bodies: %d\n", n);
   printf("Number of ticks: %d\n", numTicks);
   printf("Distance for barnes hut: %d\n", far);
 
-  fprintf(output, "Particle positions: \n");
+  //fprintf(output, "Particle positions: \n");
 
-  //initParticles();
-  testInitParticles();
+  initParticles();
+  //testInitParticles();
 
   startTime = readTimer();
   for(int i = 0; i < numTicks; i++) {
     newTree(SIZE);
     for(int j = 0; j < n; j++)
       quadTreeInsert(&particles[j]);
-    printf("GON SUMMARIZE REAL SOON\n");
+    //printf("GON SUMMARIZE REAL SOON\n");
     summarizeTree();
-    printf("SUMMARIZED BIATCH\n");
+    //printf("SUMMARIZED BIATCH\n");
     calculateForces();
     moveBodies();
     freeTree();
@@ -59,13 +59,14 @@ int main(int argc, char* argv[]) {
 
   printf("Execution time: %g\n", endTime - startTime);
 
-  fclose(output);
+  //fclose(output);
 
 }
 
 void initParticles() {
   particles = (particle*)malloc(sizeof(particle) * n);
   forces = (vector*)malloc(sizeof(vector) * n);
+  //fprintf(output, "| \t");
   for(int i = 0; i < n; i++) {
     struct vector pos = {(double) (rand() % SIZE), (double) (rand() % SIZE)};
     struct vector vel = ZERO_VECTOR();
@@ -74,9 +75,9 @@ void initParticles() {
     particles[i].vel = vel;
     forces[i] = force;
     particles[i].mass = (rand() % (MASS_MAX - 100000)) + 100000;
-    printParticlePos(particles[i]);
+    //printParticlePos(particles[i]);
   }
-  fprintf(output, "\n");
+  //fprintf(output, "\n");
 }
 
 void testInitParticles() {
@@ -97,19 +98,25 @@ void testInitParticles() {
   forces[0] = forces[1] = ZERO_VECTOR();
   particles[0].mass = MASS_MAX;
   particles[1].mass = MASS_MAX/2;
+  fprintf(output, "| \t");
+  printParticlePos(particles[0]);
+  printParticlePos(particles[1]);
+  fprintf(output, "\n");
 }
 
 void calculateForces() {
   for (int i = 0; i < n; i++) {
     forces[i] = quadTreeSumForces(&particles[i], far);
+    //printf("Force x: %lf, Force y: %lf\n", forces[i].x, forces[i].y);
   }
 }
 
 void moveBodies() {
   struct vector deltav; // dv = f/m * DT
   struct vector deltap; // dp = (v + dv/2) * DT
+  //fprintf(output, "| \t");
   for (int i = 0; i < n; i++) {
-    printf("Force x: %lf, Force y: %lf\n", forces[i].x, forces[i].y);
+    //printf("Force x: %lf, Force y: %lf\n", forces[i].x, forces[i].y);
     deltav.x = forces[i].x/particles[i].mass * DT;
     deltav.y = forces[i].y/particles[i].mass * DT;
     deltap.x = (particles[i].vel.x + deltav.x/2) * DT;
@@ -123,13 +130,13 @@ void moveBodies() {
     if(particles[i].pos.x < 0) { particles[i].pos.x = 0; particles[i].vel.x *= -1; }
     if(particles[i].pos.y < 0) { particles[i].pos.y = 0; particles[i].vel.y *= -1; }
     forces[i] = ZERO_VECTOR();
-    printParticlePos(particles[i]);
+    //printParticlePos(particles[i]);
   }
-  fprintf(output, "\n");
+  //fprintf(output, "\n");
 }
 
 void printParticlePos(struct particle p) {
-  fprintf(output, "x: %lf, y: %lf\t", p.pos.x, p.pos.y);
+  fprintf(output, "x: %*lf,  y: %*lf\t | \t", 10, p.pos.x, 10, p.pos.y);
 }
 
 double readTimer() {

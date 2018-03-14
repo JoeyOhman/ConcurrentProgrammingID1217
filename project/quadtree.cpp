@@ -48,9 +48,9 @@ void quadTreeInsert(struct particle* p) {
 
 void insertParticle(struct node *n, struct particle* p) {
   n->totalMass += p->mass;
-  printf("Particle posX: %lf, posY: %lf\n", p->pos.x, p->pos.y);
-  printf("Has particle: %d, Is leaf: %d\n", n->hasParticle, n->isLeaf);
-  printf("Node posX: %lf, posY: %lf, size: %lf\n", n->pos.x, n->pos.y, n->size);
+  //printf("Particle posX: %lf, posY: %lf\n", p->pos.x, p->pos.y);
+  //printf("Has particle: %d, Is leaf: %d\n", n->hasParticle, n->isLeaf);
+  //printf("Node posX: %lf, posY: %lf, size: %lf\n", n->pos.x, n->pos.y, n->size);
   // Base case
   if(!n->hasParticle && n->isLeaf) { // Insert particle
     n->hasParticle = true;
@@ -167,20 +167,25 @@ vector quadTreeSumForces(struct particle* p, int far) {
 }
 
 vector sumForces(struct particle* p, struct node *n, int far) {
-  struct vector force = ZERO_VECTOR(), v1, v2, v3, v4;
-  if(calcDistance(p->pos, n->centerOfMass) < far) {
-    if(!n->isLeaf) {
+  struct vector force = ZERO_VECTOR();
+  if(! n->isLeaf) {
+    //printf("COM: x=%lf, y=%lf,  TotalMass=%lf,  Distance: %lf\n", n->centerOfMass.x, n->centerOfMass.y, n->totalMass, calcDistance(p->pos, n->centerOfMass));
+    if(calcDistance(p->pos, n->centerOfMass) > far) { // Approximate
+      //printf("Approximating!\n");
+      force = calcForce(p->pos, n->centerOfMass, p->mass, n->totalMass);
+    } else { // Recurr, look deeper
+      struct vector v1, v2, v3, v4;
       v1 = sumForces(p, n->ur, far);
       v2 = sumForces(p, n->ul, far);
       v3 = sumForces(p, n->bl, far);
       v4 = sumForces(p, n->br, far);
       force = {v1.x + v2.x + v3.x + v4.x, v1.y + v2.y + v3.y + v4.y};
-    } else if(n->hasParticle) {
-      force = calcForce(p->pos, n->p->pos, p->mass, n->p->mass);
     }
-  } else {
-    force = calcForce(p->pos, n->centerOfMass, p->mass, n->totalMass);
+
+  } else if(n->hasParticle) {  // Particle in range
+    //printf("Particle in range!\n");
+    force = calcForce(p->pos, n->p->pos, p->mass, n->p->mass);
   }
-  printf("Force x: %lf, Force y: %lf\n", force.x, force.y);
+  //printf("Force x: %lf, Force y: %lf\n", force.x, force.y);
   return force;
 }
