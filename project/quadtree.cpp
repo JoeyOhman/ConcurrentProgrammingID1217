@@ -5,59 +5,90 @@
 
 struct tree {
   struct node* root;
-} quadTree;
+};
+
+struct tree* quadTree;
 
 void newTree(int worldSize) {
+  quadTree = (tree*)malloc(sizeof(tree));
   struct node *root = (node*)malloc(sizeof(node));
-  quadTree.root = root;
-  quadTree.root->size = worldSize;
-  quadTree.root->pos = ZERO_VECTOR();
+  quadTree->root = root;
+  quadTree->root->size = worldSize;
+  quadTree->root->pos = ZERO_VECTOR();
+  initiateAttr(quadTree->root);
+}
+
+void freeTree() {
+  freeTree(quadTree->root);
+}
+
+void freeTree(struct node* n) {
+  if(! n->isLeaf) {
+    freeTree(n->ur);
+    freeTree(n->ul);
+    freeTree(n->bl);
+    freeTree(n->br);
+  }
+  free(n);
+}
+
+void initiateAttr(struct node* n) {
+  n->hasParticle = false;
+  n->isLeaf = true;
+  n->totalMass = 0.0;
 }
 
 void summarizeTree() {
-  setCenterOfMasses(quadTree.root);
+  setCenterOfMasses(quadTree->root);
 }
 
-void quadTreeInsert(struct particle p) {
-  insertParticle(quadTree.root, p);
+void quadTreeInsert(struct particle* p) {
+  insertParticle(quadTree->root, p);
 }
 
-void insertParticle(struct node *n, struct particle p) {
-  n->totalMass += p.mass;
+void insertParticle(struct node *n, struct particle* p) {
+  n->totalMass += p->mass;
+  printf("Particle posX: %lf, posY: %lf\n", p->pos.x, p->pos.y);
+  printf("Has particle: %d, Is leaf: %d\n", n->hasParticle, n->isLeaf);
+  printf("Node posX: %lf, posY: %lf, size: %lf\n", n->pos.x, n->pos.y, n->size);
   // Base case
   if(!n->hasParticle && n->isLeaf) { // Insert particle
     n->hasParticle = true;
     n->p = p;
 
   } else if(n->hasParticle && !n->isLeaf) { // Recurr into child (keep looking)
-    struct node *child = findChild(*n, p.pos);
+    struct node *child = findChild(n, p->pos);
     insertParticle(child, p);
 
   } else if(n->hasParticle && n->isLeaf) { // Initiate children, insert already existing particle and then insert new recursively
+    if(n->p->pos.x == p->pos.x && n->p->pos.y == p->pos.y) {
+      printf("Particle collision!");
+      exit(1);
+    }
     n->isLeaf = false;
     initiateChildren(n);
-    struct node *oldParticleChild = findChild(*n, n->p.pos);
-    oldParticleChild->hasParticle = true;
+    struct node *oldParticleChild = findChild(n, n->p->pos);
     insertParticle(oldParticleChild, n->p); // Will always hit base case
-    struct node *newParticleChild = findChild(*n, p.pos);
-    newParticleChild->hasParticle = true;
+    oldParticleChild->hasParticle = true;
+    struct node *newParticleChild = findChild(n, p->pos);
     insertParticle(newParticleChild, p);
+    newParticleChild->hasParticle = true;
   }
 
 }
 
 // Finds the child node which the position belongs in
-node* findChild(struct node parent, struct vector pos) {
-  if(pos.x > parent.size/2) {
-    if(pos.y > parent.size/2)
-      return parent.ur;
+node* findChild(struct node* parent, struct vector pos) {
+  if(pos.x > parent->pos.x + parent->size/2) {
+    if(pos.y > parent->pos.y + parent->size/2)
+      return parent->ur;
     else
-      return parent.br;
+      return parent->br;
   } else {
-    if(pos.y > parent.size/2)
-      return parent.ul;
+    if(pos.y > parent->pos.y + parent->size/2)
+      return parent->ul;
     else
-      return parent.bl;
+      return parent->bl;
   }
 }
 
@@ -67,9 +98,16 @@ void initiateChildren(struct node *parent) {
   parent->ul = (node*)malloc(sizeof(node));
   parent->bl = (node*)malloc(sizeof(node));
   parent->br = (node*)malloc(sizeof(node));
+  initiateAttr(parent->ur);
+  initiateAttr(parent->ul);
+  initiateAttr(parent->bl);
+  initiateAttr(parent->br);
 
-  int childSize = parent->size/2;
-  parent->ur->size = parent->ul->size = parent->br->size = parent->bl->size = childSize;
+  double childSize = parent->size/2;
+  parent->ur->size = childSize;
+  parent->ul->size = childSize;
+  parent->br->size = childSize;
+  parent->bl->size = childSize;
 
   parent->ur->pos.x = parent->pos.x + childSize;
   parent->ur->pos.y = parent->pos.y + childSize;
@@ -77,7 +115,8 @@ void initiateChildren(struct node *parent) {
   parent->ul->pos.x = parent->pos.x;
   parent->ul->pos.y = parent->pos.y + childSize;
 
-  parent->bl->pos = parent->pos;
+  parent->bl->pos.x = parent->pos.x;
+  parent->bl->pos.y = parent->pos.y;
 
   parent->br->pos.x = parent->pos.x + childSize;
   parent->br->pos.y = parent->pos.y;
@@ -89,11 +128,14 @@ void setCenterOfMasses(struct node* n) {
     return;
 
   struct vector v = calcNumeratorCOM(n);
+  //struct vector v = ZERO_VECTOR();
   struct vector res = ZERO_VECTOR();
   res.x = v.x / n->totalMass;
   res.y = v.y / n->totalMass;
   n->centerOfMass = res;
-
+  //printf("Nodes pos: x:%lf y:%lf\n", n->pos.x, n->pos.y);
+  //printf("GON PRINT CHILD REAL SOON!\n");
+  //printf("Ur child, posX: %lf, posY: %lf\n", n->ur->pos.x, n->ur->pos.y);
   setCenterOfMasses(n->ur);
   setCenterOfMasses(n->ul);
   setCenterOfMasses(n->bl);
@@ -106,7 +148,7 @@ vector calcNumeratorCOM(struct node* n) {
     v = ZERO_VECTOR();
 
   } else if(n->isLeaf && n->hasParticle) {
-    v = {n->p.mass*n->p.pos.x, n->p.mass*n->p.pos.y};
+    v = {n->p->mass*n->p->pos.x, n->p->mass*n->p->pos.y};
 
   } else {
     struct vector v1, v2, v3, v4;
@@ -120,13 +162,13 @@ vector calcNumeratorCOM(struct node* n) {
   return v;
 }
 
-vector quadTreeSumForces(struct particle p, int far) {
-  sumForces(p, quadTree.root, far);
+vector quadTreeSumForces(struct particle* p, int far) {
+  return sumForces(p, quadTree->root, far);
 }
 
-vector sumForces(struct particle p, struct node *n, int far) {
+vector sumForces(struct particle* p, struct node *n, int far) {
   struct vector force = ZERO_VECTOR(), v1, v2, v3, v4;
-  if(calcDistance(p.pos, n->centerOfMass) < far) {
+  if(calcDistance(p->pos, n->centerOfMass) < far) {
     if(!n->isLeaf) {
       v1 = sumForces(p, n->ur, far);
       v2 = sumForces(p, n->ul, far);
@@ -134,10 +176,11 @@ vector sumForces(struct particle p, struct node *n, int far) {
       v4 = sumForces(p, n->br, far);
       force = {v1.x + v2.x + v3.x + v4.x, v1.y + v2.y + v3.y + v4.y};
     } else if(n->hasParticle) {
-      force = calcForce(p.pos, n->p.pos, p.mass, n->p.mass);
+      force = calcForce(p->pos, n->p->pos, p->mass, n->p->mass);
     }
   } else {
-    force = calcForce(p.pos, n->centerOfMass, p.mass, n->totalMass);
+    force = calcForce(p->pos, n->centerOfMass, p->mass, n->totalMass);
   }
+  printf("Force x: %lf, Force y: %lf\n", force.x, force.y);
   return force;
 }

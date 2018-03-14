@@ -15,9 +15,9 @@ struct particle {
 struct node {
   struct node *ur, *ul, *bl, *br; // order of quadrants
   struct vector pos, centerOfMass; // particlePos relevant if leaf
-  int size; // side of square
+  double size; // side of square
   bool hasParticle = false, isLeaf = true;
-  struct particle p;
+  struct particle *p;
   double totalMass = 0;
 };
 
@@ -29,15 +29,18 @@ double calcDistance(struct vector, struct vector);
 vector calcForce(struct vector, struct vector, double, double);
 
 void newTree(int);
-void insertParticle(node*, struct particle);
-void quadTreeInsert(struct particle);
-node* findChild(struct node, struct vector);
+void insertParticle(struct node*, struct particle*);
+void quadTreeInsert(struct particle*);
+node* findChild(struct node*, struct vector);
 void initiateChildren(struct node*);
 void setCenterOfMasses(struct node*);
 vector calcNumeratorCOM(struct node*);
 void summarizeTree();
-vector quadTreeSumForces(struct particle, int);
-vector sumForces(struct particle, struct node*, int);
+vector quadTreeSumForces(struct particle*, int);
+vector sumForces(struct particle*, struct node*, int);
+void initiateAttr(struct node*);
+void freeTree();
+void freeTree(struct node*);
 
 
 #endif /* HEADER_H */
