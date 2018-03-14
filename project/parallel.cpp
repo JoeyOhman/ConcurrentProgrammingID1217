@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <math.h>
 #include <time.h>
 #include <sys/times.h>
 #include <pthread.h>
@@ -25,7 +24,6 @@ static struct tms st_cpu, en_cpu;
 struct particle *particles;
 struct vector** forces;
 
-struct vector ZERO_VECTOR = {0, 0};
 const double G = 6.67e-11;
 const long SIZE = 100, MASS_MAX = 1e9;
 const int DT = 10;
