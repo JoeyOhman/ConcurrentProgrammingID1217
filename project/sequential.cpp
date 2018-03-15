@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
   n = argc > 1 ? atoi(argv[1]) : 10;
   int numTicks = argc > 2 ? atoi(argv[2]) : 10;
 
-  output = fopen("data", "w");
+  //output = fopen("data", "w");
 
   printf("Number of bodies: %d\n", n);
   printf("Number of ticks: %d\n", numTicks);
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
 
   printf("Execution time: %g\n", endTime - startTime);
 
-  fclose(output);
+  //fclose(output);
 
 }
 
