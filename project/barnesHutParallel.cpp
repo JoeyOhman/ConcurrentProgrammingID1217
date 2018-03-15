@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <time.h>
-#include <sys/time.h>
+#include <sys/times.h>
 #include <pthread.h>
 #include "header.h"
 
@@ -14,6 +14,11 @@ void testInitParticles();
 void printParticlePos(struct particle);
 double readTimer();
 void* forceWork(void*);
+void start_clock();
+void end_clock();
+
+static clock_t st_time, en_time;
+static struct tms st_cpu, en_cpu;
 
 const long SIZE = 500, MASS_MAX = 1e9;
 const double DT = 1;
@@ -52,42 +57,17 @@ int main(int argc, char* argv[]) {
 
   initParticles();
   //testInitParticles();
-  double execTime;
-  double forceTime = 0, forceStart, forceEnd;
-  double buildTime = 0, buildStart, buildEnd;
-  double moveTime = 0, moveStart, moveEnd;
-  startTime = readTimer();
+  start_clock();
   for(int i = 0; i < numTicks; i++) {
-    buildStart = readTimer();
     newTree(SIZE);
     for(int j = 0; j < n; j++)
       quadTreeInsert(&particles[j]);
-    //printf("GON SUMMARIZE REAL SOON\n");
     summarizeTree();
-    buildEnd = readTimer();
-    buildTime += buildEnd - buildStart;
-    //printf("SUMMARIZED BIATCH\n");
-    forceStart = readTimer();
     calculateForces(workerid);
-    forceEnd = readTimer();
-    forceTime += forceEnd - forceStart;
-    moveStart = readTimer();
     moveBodies();
-    moveEnd = readTimer();
-    moveTime += moveEnd - moveStart;
-    buildStart = readTimer();
     freeTree();
-    buildEnd = readTimer();
-    buildTime += buildEnd - buildStart;
   }
-  endTime = readTimer();
-  execTime = endTime - startTime;
-
-  printf("Move bodies time: %*g%%\n", 10, (moveTime/execTime)*100);
-  printf("Tree building time: %*g%%\n", 10, (buildTime/execTime)*100);
-  printf("Force calculation time: %*g%%\n", 10, (forceTime/execTime)*100);
-  printf("Force calculation time: %*g\n", 10, forceTime);
-  printf("Execution time: %g seconds\n", execTime);
+  end_clock();
 
   //fclose(output);
 
@@ -179,15 +159,11 @@ void printParticlePos(struct particle p) {
   fprintf(output, "x: %*lf,  y: %*lf\t | \t", 10, p.pos.x, 10, p.pos.y);
 }
 
-double readTimer() {
-    static bool initialized = false;
-    static struct timeval start;
-    struct timeval end;
-    if( !initialized )
-    {
-        gettimeofday( &start, NULL );
-        initialized = true;
-    }
-    gettimeofday( &end, NULL );
-    return (end.tv_sec - start.tv_sec) + 1.0e-6 * (end.tv_usec - start.tv_usec);
+void start_clock() {
+  st_time = times(&st_cpu);
+}
+
+void end_clock() {
+  en_time = times(&en_cpu);
+  printf("Real Time: %d ms\n", (long)(en_time - st_time));
 }
