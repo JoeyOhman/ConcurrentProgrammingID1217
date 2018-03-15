@@ -1,6 +1,7 @@
 #ifndef HEADER_H
 #define HEADER_H
 #include <math.h>
+#include <stdbool.h>
 
 struct vector {
   double x, y;
@@ -16,9 +17,9 @@ struct node {
   struct node *ur, *ul, *bl, *br; // order of quadrants
   struct vector pos, centerOfMass; // particlePos relevant if leaf
   double size; // side of square
-  bool hasParticle = false, isLeaf = true;
+  bool hasParticle, isLeaf;
   struct particle *p;
-  double totalMass = 0;
+  double totalMass;
 };
 
 const double G = 6.67e-11;

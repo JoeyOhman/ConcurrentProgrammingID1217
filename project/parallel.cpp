@@ -206,6 +206,6 @@ void start_clock() {
 
 void end_clock() {
   en_time = times(&en_cpu);
-  printf("Real Time: %jd ms", (intmax_t)(en_time - st_time));
+  printf("Real Time: %d ms\n", (long)(en_time - st_time));
 
 }

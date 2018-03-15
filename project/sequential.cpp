@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
   printf("Number of bodies: %d\n", n);
   printf("Number of ticks: %d\n", numTicks);
 
-  fprintf(output, "Particle positions: \n");
+  // fprintf(output, "Particle positions: \n");
 
   initParticles();
   //testInitParticles();
@@ -61,16 +61,16 @@ int main(int argc, char* argv[]) {
 void initParticles() {
   particles = (particle*)malloc(sizeof(particle) * n);
   for(int i = 0; i < n; i++) {
-    struct vector pos = {rand() % SIZE, rand() % SIZE};
+    struct vector pos = {(double) (rand() % SIZE), (double) (rand() % SIZE)};
     struct vector vel = {0, 0};
     struct vector force = {0, 0};
     particles[i].pos = pos;
     particles[i].vel = vel;
     particles[i].force = force;
     particles[i].mass = (rand() % MASS_MAX) + 1;
-    printParticlePos(particles[i]);
+    //printParticlePos(particles[i]);
   }
-  fprintf(output, "\n");
+  // fprintf(output, "\n");
 }
 
 void testInitParticles() {
@@ -122,13 +122,13 @@ void moveBodies() {
     particles[i].pos.x += deltap.x;
     particles[i].pos.y += deltap.y;
     particles[i].force.x = particles[i].force.y = 0.0; // reset force vector
-    printParticlePos(particles[i]);
+    //printParticlePos(particles[i]);
   }
-  fprintf(output, "\n");
+  // fprintf(output, "\n");
 }
 
 void printParticlePos(struct particle p) {
-  fprintf(output, "x: %lf, y: %lf\t", p.pos.x, p.pos.y);
+  // fprintf(output, "x: %lf, y: %lf\t", p.pos.x, p.pos.y);
 }
 
 double readTimer() {
