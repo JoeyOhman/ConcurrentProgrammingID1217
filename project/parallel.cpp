@@ -24,7 +24,6 @@ static struct tms st_cpu, en_cpu;
 struct particle *particles;
 struct vector** forces;
 
-const double G = 6.67e-11;
 const long SIZE = 100, MASS_MAX = 1e9;
 const int DT = 10;
 int n, numWorkers, numTicks;
@@ -49,7 +48,6 @@ int main(int argc, char* argv[]) {
   pthread_t workerid[numWorkers];
   pthread_mutex_init(&barrier_mutex, NULL);
   pthread_cond_init(&go, NULL);
-  for (l = 0; l < numWorkers; l++)
 
   //output = fopen("data", "w");
 
@@ -68,6 +66,7 @@ int main(int argc, char* argv[]) {
 
   start_clock();
   long l;
+  for (l = 0; l < numWorkers; l++)
     pthread_create(&workerid[l], NULL, Worker, (void *) l);
 
   //printf("Initiated threads\n");
@@ -90,11 +89,11 @@ void* Worker(void* arg) {
     //printf("Barrier done");
     moveBodies(id);
     //printf("Moved bodies!\n");
-    if(id == 0) {
+    /*if(id == 0) {
       for(int j = 0; j < n; j++)
         printParticlePos(particles[j]);
       //fprintf(output, "\n");
-    }
+    }*/
     barrier();
   }
 }
@@ -107,7 +106,7 @@ void initParticles() {
     for(int w = 0; w < numWorkers; w++)
       forces[w][i] = ZERO_VECTOR();
     particles[i].mass = (rand() % MASS_MAX) + 1;
-    printParticlePos(particles[i]);
+    //printParticlePos(particles[i]);
   }
   //fprintf(output, "\n");
 }
@@ -207,6 +206,6 @@ void start_clock() {
 
 void end_clock() {
   en_time = times(&en_cpu);
-  printf("Real Time: %jdms", (intmax_t)(en_time - st_time));
+  printf("Real Time: %jd ms", (intmax_t)(en_time - st_time));
 
 }
