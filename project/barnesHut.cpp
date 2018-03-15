@@ -23,6 +23,7 @@ FILE* output;
 struct particle *particles;
 struct vector *forces;
 
+// A size of 500 and barnes hut distance of 100 reduces force calc time to 10%
 int main(int argc, char* argv[]) {
   if(argc == 1) {
     printf("Argument 1: #particles\nArgument 2: #timeSteps\nArgument 3: distance for barnes hut approx");
@@ -42,22 +43,42 @@ int main(int argc, char* argv[]) {
 
   initParticles();
   //testInitParticles();
-
+  double execTime;
+  double forceTime = 0, forceStart, forceEnd;
+  double buildTime = 0, buildStart, buildEnd;
+  double moveTime = 0, moveStart, moveEnd;
   startTime = readTimer();
   for(int i = 0; i < numTicks; i++) {
+    buildStart = readTimer();
     newTree(SIZE);
     for(int j = 0; j < n; j++)
       quadTreeInsert(&particles[j]);
     //printf("GON SUMMARIZE REAL SOON\n");
     summarizeTree();
+    buildEnd = readTimer();
+    buildTime += buildEnd - buildStart;
     //printf("SUMMARIZED BIATCH\n");
+    forceStart = readTimer();
     calculateForces();
+    forceEnd = readTimer();
+    forceTime += forceEnd - forceStart;
+    moveStart = readTimer();
     moveBodies();
+    moveEnd = readTimer();
+    moveTime += moveEnd - moveStart;
+    buildStart = readTimer();
     freeTree();
+    buildEnd = readTimer();
+    buildTime += buildEnd - buildStart;
   }
   endTime = readTimer();
+  execTime = endTime - startTime;
 
-  printf("Execution time: %g\n", endTime - startTime);
+  printf("Move bodies time: %*g%%\n", 10, (moveTime/execTime)*100);
+  printf("Tree building time: %*g%%\n", 10, (buildTime/execTime)*100);
+  printf("Force calculation time: %*g%%\n", 10, (forceTime/execTime)*100);
+  printf("Force calculation time: %*g\n", 10, forceTime);
+  printf("Execution time: %g seconds\n", execTime);
 
   //fclose(output);
 
@@ -98,10 +119,10 @@ void testInitParticles() {
   forces[0] = forces[1] = ZERO_VECTOR();
   particles[0].mass = MASS_MAX;
   particles[1].mass = MASS_MAX/2;
-  fprintf(output, "| \t");
+  //fprintf(output, "| \t");
   printParticlePos(particles[0]);
   printParticlePos(particles[1]);
-  fprintf(output, "\n");
+  //fprintf(output, "\n");
 }
 
 void calculateForces() {

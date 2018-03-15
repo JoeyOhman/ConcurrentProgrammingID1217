@@ -49,14 +49,15 @@ int main(int argc, char* argv[]) {
   pthread_t workerid[numWorkers];
   pthread_mutex_init(&barrier_mutex, NULL);
   pthread_cond_init(&go, NULL);
+  for (l = 0; l < numWorkers; l++)
 
-  output = fopen("data", "w");
+  //output = fopen("data", "w");
 
   printf("Number of bodies: %d\n", n);
   printf("Number of ticks: %d\n", numTicks);
   printf("Number of threads: %d\n", numWorkers);
 
-  fprintf(output, "Particle positions: \n");
+  //fprintf(output, "Particle positions: \n");
 
   allocMem();
   //printf("Allocated memory\n");
@@ -67,7 +68,6 @@ int main(int argc, char* argv[]) {
 
   start_clock();
   long l;
-  for (l = 0; l < numWorkers; l++)
     pthread_create(&workerid[l], NULL, Worker, (void *) l);
 
   //printf("Initiated threads\n");
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
   //printf("Joined threads\n");
   end_clock();
 
-  fclose(output);
+  //fclose(output);
 
 }
 
@@ -93,7 +93,7 @@ void* Worker(void* arg) {
     if(id == 0) {
       for(int j = 0; j < n; j++)
         printParticlePos(particles[j]);
-      fprintf(output, "\n");
+      //fprintf(output, "\n");
     }
     barrier();
   }
@@ -103,13 +103,13 @@ void initParticles() {
   for(int i = 0; i < n; i++) {
     struct vector pos = {(double) (rand() % SIZE), (double) (rand() % SIZE)};
     particles[i].pos = pos;
-    particles[i].vel = ZERO_VECTOR;
+    particles[i].vel = ZERO_VECTOR();
     for(int w = 0; w < numWorkers; w++)
-      forces[w][i] = ZERO_VECTOR;
+      forces[w][i] = ZERO_VECTOR();
     particles[i].mass = (rand() % MASS_MAX) + 1;
     printParticlePos(particles[i]);
   }
-  fprintf(output, "\n");
+  //fprintf(output, "\n");
 }
 
 void testInitParticles() {
@@ -120,16 +120,16 @@ void testInitParticles() {
   particles[0].pos.y = 10;
   particles[1].pos.x = 5;
   particles[1].pos.y = 15;
-  particles[0].vel = particles[1].vel = ZERO_VECTOR;
+  particles[0].vel = particles[1].vel = ZERO_VECTOR();
   for(int w = 0; w < numWorkers; w++) {
-    forces[w][0] = ZERO_VECTOR;
-    forces[w][1] = ZERO_VECTOR;
+    forces[w][0] = ZERO_VECTOR();
+    forces[w][1] = ZERO_VECTOR();
   }
   particles[0].mass = 1e5;
   particles[1].mass = MASS_MAX;
   printParticlePos(particles[0]);
   printParticlePos(particles[1]);
-  fprintf(output, "\n");
+  //fprintf(output, "\n");
 }
 
 void allocMem() {
@@ -168,7 +168,7 @@ void moveBodies(long w) {
     for(long k = 0; k < numWorkers; k++) { // Sum forces into forceSum and reset forces
       forceSum.x += forces[k][i].x;
       forceSum.y += forces[k][i].y;
-      forces[k][i] = ZERO_VECTOR;
+      forces[k][i] = ZERO_VECTOR();
     }
 
     deltav.x = forceSum.x/particles[i].mass * DT;

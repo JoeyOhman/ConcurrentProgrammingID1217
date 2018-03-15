@@ -42,8 +42,8 @@ int main(int argc, char* argv[]) {
 
   fprintf(output, "Particle positions: \n");
 
-  //initParticles();
-  testInitParticles();
+  initParticles();
+  //testInitParticles();
 
   startTime = readTimer();
   for(int i = 0; i < numTicks; i++) {
