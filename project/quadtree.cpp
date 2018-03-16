@@ -48,9 +48,6 @@ void quadTreeInsert(struct particle* p) {
 
 void insertParticle(struct node *n, struct particle* p) {
   n->totalMass += p->mass;
-  //printf("Particle posX: %lf, posY: %lf\n", p->pos.x, p->pos.y);
-  //printf("Has particle: %d, Is leaf: %d\n", n->hasParticle, n->isLeaf);
-  //printf("Node posX: %lf, posY: %lf, size: %lf\n", n->pos.x, n->pos.y, n->size);
   // Base case
   if(!n->hasParticle && n->isLeaf) { // Insert particle
     n->hasParticle = true;
@@ -128,14 +125,10 @@ void setCenterOfMasses(struct node* n) {
     return;
 
   struct vector v = calcNumeratorCOM(n);
-  //struct vector v = ZERO_VECTOR();
   struct vector res = ZERO_VECTOR();
   res.x = v.x / n->totalMass;
   res.y = v.y / n->totalMass;
   n->centerOfMass = res;
-  //printf("Nodes pos: x:%lf y:%lf\n", n->pos.x, n->pos.y);
-  //printf("GON PRINT CHILD REAL SOON!\n");
-  //printf("Ur child, posX: %lf, posY: %lf\n", n->ur->pos.x, n->ur->pos.y);
   setCenterOfMasses(n->ur);
   setCenterOfMasses(n->ul);
   setCenterOfMasses(n->bl);
@@ -169,9 +162,7 @@ vector quadTreeSumForces(struct particle* p, int far) {
 vector sumForces(struct particle* p, struct node *n, int far) {
   struct vector force = ZERO_VECTOR();
   if(! n->isLeaf) {
-    //printf("COM: x=%lf, y=%lf,  TotalMass=%lf,  Distance: %lf\n", n->centerOfMass.x, n->centerOfMass.y, n->totalMass, calcDistance(p->pos, n->centerOfMass));
     if(calcDistance(p->pos, n->centerOfMass) > far) { // Approximate
-      //printf("Approximating!\n");
       force = calcForce(p->pos, n->centerOfMass, p->mass, n->totalMass);
     } else { // Recurr, look deeper
       struct vector v1, v2, v3, v4;
@@ -183,9 +174,8 @@ vector sumForces(struct particle* p, struct node *n, int far) {
     }
 
   } else if(n->hasParticle) {  // Particle in range
-    //printf("Particle in range!\n");
     force = calcForce(p->pos, n->p->pos, p->mass, n->p->mass);
   }
-  //printf("Force x: %lf, Force y: %lf\n", force.x, force.y);
+
   return force;
 }

@@ -113,14 +113,9 @@ void initParticles() {
 void calculateForces(long id) {
   int workLoad = (id == numWorkers-1 ? particlesPerThread + rest : particlesPerThread);
   int startIndex = particlesPerThread*id;
-  //printf("Startindex: %d, Endindex: %d\n", startIndex, startIndex+workLoad-1);
-  //printf("Workload: %d, id: %d\n", workLoad, id);
   for(int i = startIndex; i < startIndex + workLoad; i++) {
-    //printf("Gonna calc force on particle index: %d\n", i);
     forces[i] = quadTreeSumForces(&particles[i], far);
-    //printf("Just calced force on particle index: %d\n", i);
   }
-  //printf("Done calcing force, id: %d\n", id);
 }
 
 void moveBodies() {

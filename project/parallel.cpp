@@ -58,22 +58,17 @@ int main(int argc, char* argv[]) {
   //fprintf(output, "Particle positions: \n");
 
   allocMem();
-  //printf("Allocated memory\n");
   initParticles();
   //testInitParticles();
-
-  //printf("Initiated particles\n");
 
   start_clock();
   long l;
   for (l = 0; l < numWorkers; l++)
     pthread_create(&workerid[l], NULL, Worker, (void *) l);
 
-  //printf("Initiated threads\n");
   for(l = 0; l < numWorkers; l++)
     pthread_join(workerid[l], NULL);
 
-  //printf("Joined threads\n");
   end_clock();
 
   //fclose(output);
@@ -84,11 +79,8 @@ void* Worker(void* arg) {
   long id = (long) arg;
   for(int i = 0; i < numTicks; i++) {
     calculateForces(id);
-    //printf("Calculated forces!\n");
     barrier();
-    //printf("Barrier done");
     moveBodies(id);
-    //printf("Moved bodies!\n");
     /*if(id == 0) {
       for(int j = 0; j < n; j++)
         printParticlePos(particles[j]);
@@ -189,12 +181,9 @@ void printParticlePos(struct particle p) {
 void barrier() {
   pthread_mutex_lock(&barrier_mutex);
   numArrived++;
-  //printf("num arrived: %d of total: %d\n", numArrived, numWorkers);
   if (numArrived == numWorkers) {
     numArrived = 0;
-    //printf("All arrived, broadcasting\n");
     pthread_cond_broadcast(&go); // Signal and continue
-    //printf("All arrived, broadcasted\n");
   } else
     pthread_cond_wait(&go, &barrier_mutex);
   pthread_mutex_unlock(&barrier_mutex);

@@ -53,11 +53,9 @@ int main(int argc, char* argv[]) {
     newTree(SIZE);
     for(int j = 0; j < n; j++)
       quadTreeInsert(&particles[j]);
-    //printf("GON SUMMARIZE REAL SOON\n");
     summarizeTree();
     buildEnd = readTimer();
     buildTime += buildEnd - buildStart;
-    //printf("SUMMARIZED BIATCH\n");
     forceStart = readTimer();
     calculateForces();
     forceEnd = readTimer();
@@ -107,10 +105,6 @@ void testInitParticles() {
   // x: 9.952836, y: 10.047164	x: 5.000005, y: 14.999995
   particles = (particle*)malloc(sizeof(particle) * n);
   forces = (vector*)malloc(sizeof(vector) * n);
-  /*particles[0].pos.x = 10;
-  particles[0].pos.y = 10;
-  particles[1].pos.x = 5;
-  particles[1].pos.y = 15;*/
   particles[0].pos.x = 69;
   particles[0].pos.y = 32;
   particles[1].pos.x = 93;
@@ -128,7 +122,6 @@ void testInitParticles() {
 void calculateForces() {
   for (int i = 0; i < n; i++) {
     forces[i] = quadTreeSumForces(&particles[i], far);
-    //printf("Force x: %lf, Force y: %lf\n", forces[i].x, forces[i].y);
   }
 }
 
@@ -137,7 +130,6 @@ void moveBodies() {
   struct vector deltap; // dp = (v + dv/2) * DT
   //fprintf(output, "| \t");
   for (int i = 0; i < n; i++) {
-    //printf("Force x: %lf, Force y: %lf\n", forces[i].x, forces[i].y);
     deltav.x = forces[i].x/particles[i].mass * DT;
     deltav.y = forces[i].y/particles[i].mass * DT;
     deltap.x = (particles[i].vel.x + deltav.x/2) * DT;

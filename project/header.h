@@ -26,7 +26,7 @@ const double G = 6.67e-11;
 
 double calcDistance(struct vector, struct vector);
 
-// body 1 is a particle, body 2 is a node
+// body 1 is a particle, body 2 is a node or a particle
 vector calcForce(struct vector, struct vector, double, double);
 
 void newTree(int);
